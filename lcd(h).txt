@@ -1,0 +1,53 @@
+#ifndef     _LCD_H_
+#define     _LCD_H_
+//***************************************************//
+
+//-------------------------------------------------------------------------//
+#define	X_FREQ      8	                    // Тактовая частота МК (MHz)
+
+//-------- Пины -----------------------------------------------------------//
+
+
+    #define	RS_PIN      LATB2               // RS
+    #define RS_TRIS     TRISB2              //
+    #define	EN_PIN      LATB3               // EN
+    #define EN_TRIS     TRISB3              //
+    #define D4_PIN      LATB4               // D4
+    #define D4_TRIS     TRISB4              //
+    #define D5_PIN      LATB5               // D5
+    #define D5_TRIS     TRISB5              //
+    #define D6_PIN      LATB6               // D6
+    #define D6_TRIS     TRISB6              //
+    #define D7_PIN      LATB7               // D7
+    #define D7_TRIS     TRISB7              //
+
+
+//------------------------- Разрешение экрана ----------------------------//
+#define	LCD_MODE_1x8		0	
+#define	LCD_MODE_1x16_A		0	
+#define	LCD_MODE_1x16_B		0	
+#define	LCD_MODE_1x40		0
+#define	LCD_MODE_2x8		0
+#define	LCD_MODE_2x12		0
+#define	LCD_MODE_2x16		1
+#define	LCD_MODE_2x20		0
+#define	LCD_MODE_2x24		0
+#define	LCD_MODE_2x40		0
+#define	LCD_MODE_4x16		0
+#define	LCD_MODE_4x20		0
+#define LCD_MODE_4x24		0
+#define	LCD_MODE_4x40		0
+//------------------------- Прототипы -------------------------------------//
+extern void lcd_init(void);
+extern void lcd_clear(void);	
+extern void lcd_gotoxy(char, char);
+extern void lcd_puts(char *);
+extern void lcd_putch(char);
+extern void lcd_cgram(char *, unsigned char);
+//-------------------------------------------------------------------------//
+#define DelayUs(x) { unsigned int i=x/(40/X_FREQ) ; while(i--); }
+#define DelayMs(x) { unsigned int i=x; while(i--){unsigned int a=830/(40/X_FREQ);  while(a--); }  }
+
+//***************************************************//
+#endif      // _LCD_H_
+

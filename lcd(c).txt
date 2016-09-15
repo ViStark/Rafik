@@ -1,0 +1,198 @@
+#include	"lcd.h"
+#include    <p18f4520.h>
+
+/*******************************************************/
+
+#define SET_DATA(d) do{                     \
+    if((d)&1) D4_PIN =1; else D4_PIN =0;    \
+    if((d)&2) D5_PIN =1; else D5_PIN =0;    \
+    if((d)&4) D6_PIN =1; else D6_PIN =0;    \
+    if((d)&8) D7_PIN =1; else D7_PIN =0;    \
+}while(0)
+/*******************************************************/
+/*******************************************************/
+
+/*******************************************************/
+static const unsigned char cyr_table[]={
+'A',	// À
+160,	// Á
+'B',	// Â
+161,	// Ã
+224,	// Ä
+'E',	// Å
+//	162,	// ¨
+163,	// Æ
+164,	// Ç
+165,	// È
+166,	// É
+'K',	// K
+167,	// Ë
+'M',	// M
+'H',	// H
+'O',	// O
+168,	// Ï
+'P',	// P
+'C',	// C
+'T',	// T
+169,	// Ó
+170,	// Ô
+'X',	// X
+225,	// Ö
+171,	// ×
+172,	// Ø
+226,	// Ù
+173,	// Ú
+174,	// Û
+'b',	// Ü
+175,	// Ý
+176,	// Þ
+177,	// ß
+'a',	// à
+178,	// á
+179,	// â
+180,	// ã
+227,	// ä
+'e',	// e
+//	181,	// ¸
+182,	// æ
+183,	// ç
+184,	// è
+185,	// é
+186,	// ê
+187,	// ë
+188,	// ì
+189,	// í
+'o',	// o
+190,	// ï
+'p',	// ð
+'c',	// ñ
+191,	// ò
+'y',	// y
+228,	// ô
+'x',	// x
+229,	// ö
+192,	// ÷
+193,	// ø
+230,	// ù
+194,	// ú
+195,	// û
+196,	// ü
+197,	// ý
+198,	// þ
+199,	// ÿ
+};
+/*******************************************************/
+unsigned char chr_to_cyr (unsigned char ch){
+if (ch==168)    return 162;
+if (ch==184)    return 181;
+if (ch>=192)    return cyr_table[ch-192];
+return ch;
+}
+/*******************************************************/
+void Lcd_Strobe(void)	{EN_PIN=1;DelayUs(1);EN_PIN=0;}
+/*******************************************************/
+void lcd_write(unsigned char c){
+DelayUs(50);
+SET_DATA(c>>4);             // h
+DelayUs(2);	Lcd_Strobe();
+DelayUs(10);
+SET_DATA(c);                // l
+DelayUs(2);	Lcd_Strobe();
+DelayUs(10);
+SET_DATA(0);
+}
+/*******************************************************/
+void lcd_clear(void){
+RS_PIN = 0;
+lcd_write(0x01);
+DelayMs(2);
+}
+/*******************************************************/
+void lcd_puts(char * s){
+while(*s)   lcd_putch(*s++);
+}
+/*******************************************************/
+void putch(unsigned char byte){
+lcd_putch(byte);
+}
+/*******************************************************/
+void lcd_putch(char c){
+RS_PIN = 1;
+lcd_write(c);
+}
+/*******************************************************/
+void lcd_gotoxy (char row, char col){
+const char LCD_ROW_ADDRESS[]= {
+    #if LCD_MODE_1x8
+        0x00
+    #elif LCD_MODE_1x16_A
+        0x00
+    #elif LCD_MODE_1x16_B
+        0x00,0x40
+    #elif LCD_MODE_1x40
+        0x00
+    #elif LCD_MODE_2x8
+        0x00,0x40
+    #elif LCD_MODE_2x12
+        0x00,0x40
+    #elif LCD_MODE_2x16
+        0x00,0x40
+    #elif LCD_MODE_2x20
+        0x00,0x40
+    #elif LCD_MODE_2x24
+        0x00,0x40
+    #elif LCD_MODE_2x40
+        0x00,0x40
+    #elif LCD_MODE_4x16
+        0x00,0x40,0x10,0x50
+    #elif LCD_MODE_4x20
+        0x00,0x40,0x14,0x54
+    #elif LCD_MODE_4x24
+        0x00,0x40,0x80,0xc0
+    #endif
+};
+row = LCD_ROW_ADDRESS[row];					
+row += col ;
+RS_PIN = 0;
+lcd_write(0x80 | row);				
+}
+/*******************************************************/
+void lcd_init(){
+RS_PIN = 0;
+EN_PIN = 0;
+SET_DATA(0x00);
+RS_TRIS=0;
+EN_TRIS=0;
+D4_TRIS =0;
+D5_TRIS =0;
+D6_TRIS =0;
+D7_TRIS =0;
+DelayMs(15);	// wait 15mSec after power applied,
+SET_DATA(0x03);
+Lcd_Strobe();
+DelayMs(10);
+Lcd_Strobe();
+DelayUs(200);
+Lcd_Strobe();
+DelayUs(200);
+SET_DATA(0x02);
+Lcd_Strobe();
+DelayUs(200);
+lcd_write(0x28);    // Set interface length
+lcd_write(0b1100);  // Display On, Cursor off, Cursor Blink off
+lcd_write(0x06);    // Set entry Mode
+}
+/*******************************************************/
+void lcd_cgram(char *arr, unsigned char adr){
+unsigned char i;
+adr<<=3;
+adr|=0x40;
+RS_PIN = 0;
+lcd_write(adr);
+RS_PIN = 1;
+for(i=0;i<8;i++)    lcd_write(arr[i]);
+RS_PIN = 0;
+lcd_write(0x80);
+}
+
+
